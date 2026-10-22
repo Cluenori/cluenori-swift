@@ -9,22 +9,21 @@ no longer support. Apple's frameworks only, MIT-licensed.
 It is one Swift package with a small core and opt-in libraries. It needs iOS 26 or later and Swift
 6.2 tools (Xcode 26 or later); it is built and checked with Xcode 27.2.
 
-**From this repository, by local path, for now.** In Xcode, File > Add Package Dependencies > Add
-Local, and pick this folder (`sdks/swift` in Cluenori's repository). Or, in a `Package.swift`:
+In Xcode, File > Add Package Dependencies, and enter `https://github.com/Cluenori/cluenori-swift`.
+Or, in a `Package.swift`:
 
 ```swift
-.package(path: "../cluenori/sdks/swift"),
+.package(url: "https://github.com/Cluenori/cluenori-swift", from: "0.1.0"),
 // and in your target:
-.product(name: "Cluenori", package: "swift"),
-.product(name: "CluenoriUpdateGate", package: "swift"),
-```
-
-**From GitHub, once it is published** as its own repository:
-
-```swift
-.package(url: "https://github.com/<owner>/cluenori-swift", from: "0.1.0"),
 .product(name: "Cluenori", package: "cluenori-swift"),
+.product(name: "CluenoriUpdateGate", package: "cluenori-swift"),
 ```
+
+`Cluenori/cluenori-swift` is a read-only mirror of `sdks/swift` in
+[Cluenori/cluenori](https://github.com/Cluenori/cluenori), published on every change; open issues
+and pull requests there. A version is published by pushing a `swift-v<version>` tag there, such as
+`swift-v0.1.0`, which the mirror carries as `0.1.0`. To work on the SDK inside an app, add this
+folder by local path instead (File > Add Package Dependencies > Add Local).
 
 Then link the libraries you want:
 
