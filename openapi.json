@@ -1,0 +1,770 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "CluenoriIngest",
+    "version": "0.0.1"
+  },
+  "paths": {
+    "/ingest/v1/app/batch": {
+      "post": {
+        "tags": [
+          "appIngest"
+        ],
+        "operationId": "appIngest.sendBatch",
+        "parameters": [],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "AppBatchAccepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppBatchAccepted"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "SdkKeyRejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SdkKeyRejected"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TooManySignals",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManySignals"
+                }
+              }
+            }
+          }
+        },
+        "description": "Records a batch of an app's signals: sessions, launches, memory, screens, events, and MetricKit's reports, from one installation of one release. A signal sent before, by its ID, is counted once, so a batch may be sent again after a failure. The country is read from the request's address, which isn't kept. 401 for an SDK key the deployment doesn't know or revoked: stop sending. 429 when the key or the installation sent too much lately: keep the batch and send it after `retryAfterSeconds`. 413 for a body over 1 MB: send fewer signals at once. 503 when Cluenori couldn't keep the batch: nothing of it was counted; send it again after `Retry-After`.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppBatch"
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/ingest/v1/app/manifest": {
+      "get": {
+        "tags": [
+          "appManifest"
+        ],
+        "operationId": "appManifest.manifest",
+        "parameters": [
+          {
+            "name": "environment",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 40
+            },
+            "required": true
+          },
+          {
+            "name": "release",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 64
+            },
+            "required": true
+          },
+          {
+            "name": "locale",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 35
+            },
+            "required": false
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "AppManifest",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppManifest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "SdkKeyRejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SdkKeyRejected"
+                }
+              }
+            }
+          }
+        },
+        "description": "The manifest of one release of the SDK key's component: what the app should do about its version (`none`, `recommend` a newer release, or `require` an update), with the release to update to and the project's words in the language asked for. The same for every installation of the release, and cached at the edge for `maxAgeSeconds`. 401 for an SDK key the deployment doesn't know or revoked; an SDK then keeps the last manifest it got, and never blocks without one."
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "SdkKeyRejected": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "SdkKeyRejected"
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "_tag",
+          "message"
+        ],
+        "additionalProperties": false
+      },
+      "AppManifest": {
+        "type": "object",
+        "properties": {
+          "versionPolicy": {
+            "$ref": "#/components/schemas/VersionPolicy"
+          },
+          "maxAgeSeconds": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "versionPolicy",
+          "maxAgeSeconds"
+        ],
+        "additionalProperties": false
+      },
+      "VersionPolicy": {
+        "type": "object",
+        "properties": {
+          "decision": {
+            "$ref": "#/components/schemas/UpdateDecision"
+          },
+          "update": {
+            "$ref": "#/components/schemas/AvailableUpdate"
+          },
+          "text": {
+            "$ref": "#/components/schemas/UpdateText"
+          }
+        },
+        "required": [
+          "decision"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateText": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "title",
+          "message"
+        ],
+        "additionalProperties": false
+      },
+      "AvailableUpdate": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "minimumOsVersion": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "storeUrl": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "storeUrl"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateDecision": {
+        "type": "string",
+        "enum": [
+          "none",
+          "recommend",
+          "require"
+        ]
+      },
+      "TooManySignals": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "TooManySignals"
+            ]
+          },
+          "retryAfterSeconds": {
+            "type": "integer",
+            "maximum": 9007199254740991,
+            "exclusiveMinimum": 0
+          }
+        },
+        "required": [
+          "_tag",
+          "retryAfterSeconds"
+        ],
+        "additionalProperties": false
+      },
+      "AppBatchAccepted": {
+        "type": "object",
+        "properties": {
+          "accepted": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "duplicates": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "accepted",
+          "duplicates"
+        ],
+        "additionalProperties": false
+      },
+      "AppBatch": {
+        "type": "object",
+        "properties": {
+          "installation": {
+            "type": "string"
+          },
+          "environment": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "release": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "device": {
+            "$ref": "#/components/schemas/AppDevice"
+          },
+          "sdk": {
+            "$ref": "#/components/schemas/AppSdk"
+          },
+          "sentAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "signals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AppSignal"
+            },
+            "minItems": 1,
+            "maxItems": 500
+          }
+        },
+        "required": [
+          "installation",
+          "environment",
+          "release",
+          "device",
+          "sdk",
+          "sentAt",
+          "signals"
+        ],
+        "additionalProperties": false
+      },
+      "AppSignal": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/SessionStarted"
+          },
+          {
+            "$ref": "#/components/schemas/SessionEnded"
+          },
+          {
+            "$ref": "#/components/schemas/AppLaunched"
+          },
+          {
+            "$ref": "#/components/schemas/AppMemory"
+          },
+          {
+            "$ref": "#/components/schemas/ScreenShown"
+          },
+          {
+            "$ref": "#/components/schemas/EventTracked"
+          },
+          {
+            "$ref": "#/components/schemas/MetricKitReport"
+          }
+        ]
+      },
+      "MetricKitReport": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "metrickit"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "report": {
+            "$ref": "#/components/schemas/MetricKitKind"
+          },
+          "payload": {}
+        },
+        "required": [
+          "_tag",
+          "id",
+          "at",
+          "report",
+          "payload"
+        ],
+        "additionalProperties": false
+      },
+      "MetricKitKind": {
+        "type": "string",
+        "enum": [
+          "metrics",
+          "diagnostics"
+        ]
+      },
+      "EventTracked": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "event"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "session": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AppUserId"
+          },
+          "feature": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^\\S[\\s\\S]*\\S$|^\\S$|^$",
+            "allOf": [
+              {
+                "pattern": "^\\P{Cc}*$"
+              }
+            ]
+          },
+          "properties": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "_tag",
+          "id",
+          "at",
+          "session",
+          "name"
+        ],
+        "additionalProperties": false
+      },
+      "AppUserId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "ScreenShown": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "screen"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "session": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AppUserId"
+          },
+          "feature": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "screen": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^\\S[\\s\\S]*\\S$|^\\S$|^$",
+            "allOf": [
+              {
+                "pattern": "^\\P{Cc}*$"
+              }
+            ]
+          }
+        },
+        "required": [
+          "_tag",
+          "id",
+          "at",
+          "session",
+          "screen"
+        ],
+        "additionalProperties": false
+      },
+      "AppMemory": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "app.memory"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "session": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AppUserId"
+          },
+          "feature": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "reason": {
+            "$ref": "#/components/schemas/MemoryReason"
+          },
+          "footprintBytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "peakBytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "_tag",
+          "id",
+          "at",
+          "session",
+          "reason",
+          "footprintBytes",
+          "peakBytes"
+        ],
+        "additionalProperties": false
+      },
+      "MemoryReason": {
+        "type": "string",
+        "enum": [
+          "interval",
+          "warning",
+          "session_end"
+        ]
+      },
+      "AppLaunched": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "app.launched"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "session": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AppUserId"
+          },
+          "feature": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "start": {
+            "$ref": "#/components/schemas/LaunchStart"
+          },
+          "prewarmed": {
+            "type": "boolean"
+          },
+          "firstFrameMs": {
+            "type": "number",
+            "minimum": 0
+          },
+          "readyMs": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "_tag",
+          "id",
+          "at",
+          "session",
+          "start",
+          "prewarmed",
+          "firstFrameMs"
+        ],
+        "additionalProperties": false
+      },
+      "LaunchStart": {
+        "type": "string",
+        "enum": [
+          "cold",
+          "warm"
+        ]
+      },
+      "SessionEnded": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "session.ended"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "session": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AppUserId"
+          },
+          "feature": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "foregroundMs": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "_tag",
+          "id",
+          "at",
+          "session",
+          "foregroundMs"
+        ],
+        "additionalProperties": false
+      },
+      "SessionStarted": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "session.started"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "session": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AppUserId"
+          },
+          "feature": {
+            "type": "string",
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "_tag",
+          "id",
+          "at",
+          "session"
+        ],
+        "additionalProperties": false
+      },
+      "AppSdk": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^\\P{Cc}+$"
+          },
+          "version": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^\\P{Cc}+$"
+          }
+        },
+        "required": [
+          "name",
+          "version"
+        ],
+        "additionalProperties": false
+      },
+      "AppDevice": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^\\P{Cc}+$"
+          },
+          "platform": {
+            "$ref": "#/components/schemas/AppPlatform"
+          },
+          "osVersion": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^\\P{Cc}+$"
+          },
+          "locale": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^\\P{Cc}+$"
+          },
+          "timeZone": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^\\P{Cc}+$"
+          }
+        },
+        "required": [
+          "model",
+          "platform",
+          "osVersion",
+          "locale",
+          "timeZone"
+        ],
+        "additionalProperties": false
+      },
+      "AppPlatform": {
+        "type": "string",
+        "enum": [
+          "iOS",
+          "iPadOS",
+          "macOS",
+          "visionOS",
+          "watchOS",
+          "tvOS"
+        ]
+      }
+    },
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "Bearer"
+      }
+    }
+  },
+  "security": [],
+  "tags": [
+    {
+      "name": "appIngest"
+    },
+    {
+      "name": "appManifest"
+    }
+  ]
+}
