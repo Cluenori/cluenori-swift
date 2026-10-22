@@ -1,0 +1,4 @@
+# What SwiftPM, Xcode and ./check build
+.build/
+.swiftpm/
+xcuserdata/

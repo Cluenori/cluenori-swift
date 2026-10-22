@@ -1,0 +1,74 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Cards" : {
+      "comment" : "The app's title.",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Карточки"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Картки"
+          }
+        }
+      }
+    },
+    "Flips the card" : {
+      "comment" : "What tapping a card does, for VoiceOver.",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переворачивает карточку"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевертає картку"
+          }
+        }
+      }
+    },
+    "Headers of the last request" : {
+      "comment" : "Above the headers Cluenori added to the last request.",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заголовки последнего запроса"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заголовки останнього запиту"
+          }
+        }
+      }
+    },
+    "Sync" : {
+      "comment" : "Sends a request to the app's own API.",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Синхронизировать"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Синхронізувати"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

@@ -1,0 +1,71 @@
+{
+  "default-configuration": "Release",
+  "configurations": [
+    { "name": "Debug", "file": "Config/Example.xcconfig" },
+    { "name": "Release", "file": "Config/Example.xcconfig" },
+  ],
+  "localizations": {
+    "development": "en",
+    "supported": [
+      "Base",
+    ],
+  },
+  "packages": [
+    {
+      "kind": "local",
+      "path": "..",
+    },
+  ],
+  "files": [
+    {
+      "kind": "group",
+      "path": "Config",
+      "children": [
+        { "path": "Example.xcconfig" },
+      ],
+    }, {
+      "kind": "group",
+      "name": "Products",
+      "children": [
+        { "path": "<PRODUCTS>/CluenoriExample.app", "id": "3C885DA9308A840500A93986", "type": "wrapper.application", "index": false },
+      ],
+    },
+    { "kind": "folder", "path": "CluenoriExample", "target-membership": [ "CluenoriExample" ] },
+  ],
+  "targets": [
+    {
+      "name": "CluenoriExample",
+      "id": "3C885DA8308A840500A93986",
+      "product": "Products/CluenoriExample.app",
+      "product-type": "application",
+      "build-phases": [
+        "compile-sources",
+        "frameworks",
+        "resources",
+      ],
+      "package-product-members": [
+        {
+          "package": "..",
+          "product-name": "Cluenori",
+          "build-phase": { "build-phase": "frameworks" },
+        }, {
+          "package": "..",
+          "product-name": "CluenoriAnalytics",
+          "build-phase": { "build-phase": "frameworks" },
+        }, {
+          "package": "..",
+          "product-name": "CluenoriPerformance",
+          "build-phase": { "build-phase": "frameworks" },
+        }, {
+          "package": "..",
+          "product-name": "CluenoriUpdateGate",
+          "build-phase": { "build-phase": "frameworks" },
+        },
+      ],
+      "build-settings": {
+        "GENERATE_INFOPLIST_FILE": "YES",
+        "PRODUCT_NAME": "$(TARGET_NAME)",
+      },
+    },
+  ],
+}

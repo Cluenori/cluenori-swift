@@ -1,0 +1,176 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "A new version is available" : {
+      "comment" : "Title of the sheet that recommends updating the app.",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Доступна новая версия"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Доступна нова версія"
+          }
+        }
+      }
+    },
+    "Not Now" : {
+      "comment" : "Closes the sheet that recommends updating the app.",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не сейчас"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не зараз"
+          }
+        }
+      }
+    },
+    "OK" : {
+      "comment" : "Closes the notice that the device's OS is too old for the update.",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        }
+      }
+    },
+    "The update needs %@" : {
+      "comment" : "Title of the notice shown when the device's OS is too old for the app's update. The variable is the OS and its version, such as iOS 26.0.",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Для обновления нужна %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Для оновлення потрібна %@"
+          }
+        }
+      }
+    },
+    "This version of %@ is no longer supported. Update to version %@ to keep using it." : {
+      "comment" : "Message of the full screen shown when the app's version may no longer be used. The first variable is the app's name, the second the version to update to.",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Эта версия приложения %1$@ больше не поддерживается. Обновите его до версии %2$@, чтобы продолжить им пользоваться."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ця версія застосунку %1$@ більше не підтримується. Оновіть його до версії %2$@, щоб і далі ним користуватися."
+          }
+        }
+      }
+    },
+    "Update" : {
+      "comment" : "The button that opens the App Store to update the app.",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обновить"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновити"
+          }
+        }
+      }
+    },
+    "Update to continue" : {
+      "comment" : "Title of the full screen shown when the app's version may no longer be used.",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обновите, чтобы продолжить"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновіть, щоб продовжити"
+          }
+        }
+      }
+    },
+    "Version %@ is on the App Store." : {
+      "comment" : "Below the update button. The variable is the version to update to.",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Версия %@ уже в App Store."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Версія %@ уже в App Store."
+          }
+        }
+      }
+    },
+    "Version %@ of %@ is ready on the App Store." : {
+      "comment" : "Message of the sheet that recommends updating the app. The first variable is the version to update to, the second the app's name.",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Версия %1$@ приложения %2$@ уже в App Store."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Версія %1$@ застосунку %2$@ уже в App Store."
+          }
+        }
+      }
+    },
+    "You can keep using this version of %@. The latest version needs %@ or later." : {
+      "comment" : "Message of the notice shown when the device's OS is too old for the app's update. The first variable is the app's name, the second the OS and its version, such as iOS 26.0.",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Этой версией приложения %1$@ можно пользоваться и дальше. Последней версии нужна %2$@ или новее."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цією версією застосунку %1$@ можна користуватися й далі. Остання версія потребує %2$@ або новішої."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

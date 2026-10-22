@@ -1,0 +1,56 @@
+#!/bin/sh
+# Checks the Swift SDK, as `bun run check:sdk-swift` does: its Swift's formatting; that it uses
+# Apple's frameworks alone, and the generated client Foundation alone; the package's tests, on this
+# Mac; the package built for the iOS Simulator and for iPhones; and the example app built. Every
+# warning is an error here, though never in an app's build. Needs a Mac with Xcode.
+set -eu
+cd "$(dirname "$0")"
+
+# The Xcode the SDK is built with; another can be given in DEVELOPER_DIR.
+export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode27.2RC.app/Contents/Developer}"
+
+echo "Checking the Swift's formatting"
+xcrun swift format lint --strict --recursive Sources Tests Package.swift Example/CluenoriExample
+
+echo "Checking that it uses Apple's frameworks alone"
+if grep -q '\.package(' Package.swift; then
+  echo "Package.swift depends on another package; the SDK uses Apple's frameworks alone."
+  exit 1
+fi
+foreign=$(grep -rhE '^[[:space:]]*(public |package |internal )?import ' Sources \
+  | sed -E 's/^[[:space:]]*(public |package |internal )?import //' | sort -u \
+  | grep -vxE 'Cluenori|CluenoriIngest|Foundation|FoundationNetworking|Darwin|Observation|Synchronization|SwiftUI|UIKit|MetricKit|os' || true)
+if [ -n "$foreign" ]; then
+  echo "The SDK imports modules beyond Apple's and its own:"
+  echo "$foreign"
+  exit 1
+fi
+ingest=$(grep -hE '^[[:space:]]*import ' Sources/CluenoriIngest/*.swift | sed -E 's/^[[:space:]]*//' | sort -u \
+  | grep -vxE 'import (Foundation|FoundationNetworking)' || true)
+if [ -n "$ingest" ]; then
+  echo "CluenoriIngest, the generated client, may import Foundation alone: $ingest"
+  exit 1
+fi
+
+echo "Testing the package"
+xcrun swift test --quiet -Xswiftc -warnings-as-errors
+
+mkdir -p .build
+# Builds with Xcode, showing what it says but its notes about run destinations, which this check
+# doesn't use; fails when the build does.
+xcode_build() {
+  status=0
+  xcodebuild -derivedDataPath .build/check -quiet SWIFT_TREAT_WARNINGS_AS_ERRORS=YES "$@" build > .build/check.log 2>&1 \
+    || status=$?
+  grep -v 'IDERunDestination\|operatingSystemVersion' .build/check.log || true
+  return $status
+}
+
+echo "Building the package for the iOS Simulator and for iPhones"
+xcode_build -scheme Cluenori-Package -destination 'generic/platform=iOS Simulator'
+xcode_build -scheme Cluenori-Package -configuration Release -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO
+
+echo "Building the example app"
+xcode_build -project Example/CluenoriExample.xcodeproj -scheme CluenoriExample -destination 'generic/platform=iOS Simulator'
+
+echo "The Swift SDK is in order."
