@@ -217,12 +217,78 @@ public nonisolated struct AppDevice: Codable, Hashable, Sendable {
     }
 }
 
+public nonisolated struct AppHang: Codable, Hashable, Sendable {
+    public let id: String
+    public let at: Date
+    public let session: String
+    public let user: String?
+    public let feature: String?
+    public let screen: String?
+    public let ms: Double
+
+    public init(
+        id: String,
+        at: Date,
+        session: String,
+        user: String? = nil,
+        feature: String? = nil,
+        screen: String? = nil,
+        ms: Double,
+    ) {
+        self.id = id
+        self.at = at
+        self.session = session
+        self.user = user
+        self.feature = feature
+        self.screen = screen
+        self.ms = ms
+    }
+
+    private enum `JSON keys`: String, CodingKey {
+        case _tag = "_tag"
+        case id = "id"
+        case at = "at"
+        case session = "session"
+        case user = "user"
+        case feature = "feature"
+        case screen = "screen"
+        case ms = "ms"
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: `JSON keys`.self)
+        guard try container.`value at`(._tag) as String == "app.hang" else {
+            throw container.`corruption at`(._tag, "_tag isn't app.hang.")
+        }
+        self.id = try container.`value at`(.id)
+        self.at = try container.`value at`(.at)
+        self.session = try container.`value at`(.session)
+        self.user = try container.`value if present at`(.user)
+        self.feature = try container.`value if present at`(.feature)
+        self.screen = try container.`value if present at`(.screen)
+        self.ms = try container.`value at`(.ms)
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: `JSON keys`.self)
+        try container.encode("app.hang", forKey: ._tag)
+        try container.encode(self.id, forKey: .id)
+        try container.encode(self.at, forKey: .at)
+        try container.encode(self.session, forKey: .session)
+        try container.encodeIfPresent(self.user, forKey: .user)
+        try container.encodeIfPresent(self.feature, forKey: .feature)
+        try container.encodeIfPresent(self.screen, forKey: .screen)
+        try container.encode(self.ms, forKey: .ms)
+    }
+}
+
 public nonisolated struct AppLaunched: Codable, Hashable, Sendable {
     public let id: String
     public let at: Date
     public let session: String
     public let user: String?
     public let feature: String?
+    public let screen: String?
     public let start: LaunchStart
     public let prewarmed: Bool
     public let firstFrameMs: Double
@@ -234,6 +300,7 @@ public nonisolated struct AppLaunched: Codable, Hashable, Sendable {
         session: String,
         user: String? = nil,
         feature: String? = nil,
+        screen: String? = nil,
         start: LaunchStart,
         prewarmed: Bool,
         firstFrameMs: Double,
@@ -244,6 +311,7 @@ public nonisolated struct AppLaunched: Codable, Hashable, Sendable {
         self.session = session
         self.user = user
         self.feature = feature
+        self.screen = screen
         self.start = start
         self.prewarmed = prewarmed
         self.firstFrameMs = firstFrameMs
@@ -257,6 +325,7 @@ public nonisolated struct AppLaunched: Codable, Hashable, Sendable {
         case session = "session"
         case user = "user"
         case feature = "feature"
+        case screen = "screen"
         case start = "start"
         case prewarmed = "prewarmed"
         case firstFrameMs = "firstFrameMs"
@@ -273,6 +342,7 @@ public nonisolated struct AppLaunched: Codable, Hashable, Sendable {
         self.session = try container.`value at`(.session)
         self.user = try container.`value if present at`(.user)
         self.feature = try container.`value if present at`(.feature)
+        self.screen = try container.`value if present at`(.screen)
         self.start = try container.`value at`(.start)
         self.prewarmed = try container.`value at`(.prewarmed)
         self.firstFrameMs = try container.`value at`(.firstFrameMs)
@@ -287,6 +357,7 @@ public nonisolated struct AppLaunched: Codable, Hashable, Sendable {
         try container.encode(self.session, forKey: .session)
         try container.encodeIfPresent(self.user, forKey: .user)
         try container.encodeIfPresent(self.feature, forKey: .feature)
+        try container.encodeIfPresent(self.screen, forKey: .screen)
         try container.encode(self.start, forKey: .start)
         try container.encode(self.prewarmed, forKey: .prewarmed)
         try container.encode(self.firstFrameMs, forKey: .firstFrameMs)
@@ -327,6 +398,7 @@ public nonisolated struct AppMemory: Codable, Hashable, Sendable {
     public let session: String
     public let user: String?
     public let feature: String?
+    public let screen: String?
     public let reason: MemoryReason
     public let footprintBytes: Int
     public let peakBytes: Int
@@ -337,6 +409,7 @@ public nonisolated struct AppMemory: Codable, Hashable, Sendable {
         session: String,
         user: String? = nil,
         feature: String? = nil,
+        screen: String? = nil,
         reason: MemoryReason,
         footprintBytes: Int,
         peakBytes: Int,
@@ -346,6 +419,7 @@ public nonisolated struct AppMemory: Codable, Hashable, Sendable {
         self.session = session
         self.user = user
         self.feature = feature
+        self.screen = screen
         self.reason = reason
         self.footprintBytes = footprintBytes
         self.peakBytes = peakBytes
@@ -358,6 +432,7 @@ public nonisolated struct AppMemory: Codable, Hashable, Sendable {
         case session = "session"
         case user = "user"
         case feature = "feature"
+        case screen = "screen"
         case reason = "reason"
         case footprintBytes = "footprintBytes"
         case peakBytes = "peakBytes"
@@ -373,6 +448,7 @@ public nonisolated struct AppMemory: Codable, Hashable, Sendable {
         self.session = try container.`value at`(.session)
         self.user = try container.`value if present at`(.user)
         self.feature = try container.`value if present at`(.feature)
+        self.screen = try container.`value if present at`(.screen)
         self.reason = try container.`value at`(.reason)
         self.footprintBytes = try container.`value at`(.footprintBytes)
         self.peakBytes = try container.`value at`(.peakBytes)
@@ -386,6 +462,7 @@ public nonisolated struct AppMemory: Codable, Hashable, Sendable {
         try container.encode(self.session, forKey: .session)
         try container.encodeIfPresent(self.user, forKey: .user)
         try container.encodeIfPresent(self.feature, forKey: .feature)
+        try container.encodeIfPresent(self.screen, forKey: .screen)
         try container.encode(self.reason, forKey: .reason)
         try container.encode(self.footprintBytes, forKey: .footprintBytes)
         try container.encode(self.peakBytes, forKey: .peakBytes)
@@ -406,6 +483,9 @@ public nonisolated struct AppPlatform: RawRepresentable, Codable, Hashable, Send
     public static let visionOS = AppPlatform(rawValue: "visionOS")
     public static let watchOS = AppPlatform(rawValue: "watchOS")
     public static let tvOS = AppPlatform(rawValue: "tvOS")
+    public static let web = AppPlatform(rawValue: "web")
+    public static let linux = AppPlatform(rawValue: "linux")
+    public static let windows = AppPlatform(rawValue: "windows")
 }
 
 public nonisolated struct AppSdk: Codable, Hashable, Sendable {
@@ -445,6 +525,11 @@ public nonisolated enum AppSignal: Codable, Hashable, Sendable {
     case screen(ScreenShown)
     case event(EventTracked)
     case metrickit(MetricKitReport)
+    case screenReady(ScreenReady)
+    case screenLeft(ScreenLeft)
+    case appHang(AppHang)
+    case error(ErrorRecorded)
+    case timing(TimingMeasured)
     case unknown(String)
 
     private enum `JSON keys`: String, CodingKey {
@@ -461,6 +546,11 @@ public nonisolated enum AppSignal: Codable, Hashable, Sendable {
         case "screen": self = .screen(try ScreenShown(from: decoder))
         case "event": self = .event(try EventTracked(from: decoder))
         case "metrickit": self = .metrickit(try MetricKitReport(from: decoder))
+        case "screen.ready": self = .screenReady(try ScreenReady(from: decoder))
+        case "screen.left": self = .screenLeft(try ScreenLeft(from: decoder))
+        case "app.hang": self = .appHang(try AppHang(from: decoder))
+        case "error": self = .error(try ErrorRecorded(from: decoder))
+        case "timing": self = .timing(try TimingMeasured(from: decoder))
         default: self = .unknown(kind)
         }
     }
@@ -474,6 +564,11 @@ public nonisolated enum AppSignal: Codable, Hashable, Sendable {
         case .screen(let value): try value.encode(to: encoder)
         case .event(let value): try value.encode(to: encoder)
         case .metrickit(let value): try value.encode(to: encoder)
+        case .screenReady(let value): try value.encode(to: encoder)
+        case .screenLeft(let value): try value.encode(to: encoder)
+        case .appHang(let value): try value.encode(to: encoder)
+        case .error(let value): try value.encode(to: encoder)
+        case .timing(let value): try value.encode(to: encoder)
         case .unknown(let kind):
             var container = encoder.container(keyedBy: `JSON keys`.self)
             try container.encode(kind, forKey: .kind)
@@ -513,12 +608,96 @@ public nonisolated struct AvailableUpdate: Codable, Hashable, Sendable {
     }
 }
 
+public nonisolated struct ErrorRecorded: Codable, Hashable, Sendable {
+    public let id: String
+    public let at: Date
+    public let session: String
+    public let user: String?
+    public let feature: String?
+    public let screen: String?
+    public let type: String
+    public let message: String
+    public let stack: String?
+    public let handled: Bool
+
+    public init(
+        id: String,
+        at: Date,
+        session: String,
+        user: String? = nil,
+        feature: String? = nil,
+        screen: String? = nil,
+        type: String,
+        message: String,
+        stack: String? = nil,
+        handled: Bool,
+    ) {
+        self.id = id
+        self.at = at
+        self.session = session
+        self.user = user
+        self.feature = feature
+        self.screen = screen
+        self.type = type
+        self.message = message
+        self.stack = stack
+        self.handled = handled
+    }
+
+    private enum `JSON keys`: String, CodingKey {
+        case _tag = "_tag"
+        case id = "id"
+        case at = "at"
+        case session = "session"
+        case user = "user"
+        case feature = "feature"
+        case screen = "screen"
+        case type = "type"
+        case message = "message"
+        case stack = "stack"
+        case handled = "handled"
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: `JSON keys`.self)
+        guard try container.`value at`(._tag) as String == "error" else {
+            throw container.`corruption at`(._tag, "_tag isn't error.")
+        }
+        self.id = try container.`value at`(.id)
+        self.at = try container.`value at`(.at)
+        self.session = try container.`value at`(.session)
+        self.user = try container.`value if present at`(.user)
+        self.feature = try container.`value if present at`(.feature)
+        self.screen = try container.`value if present at`(.screen)
+        self.type = try container.`value at`(.type)
+        self.message = try container.`value at`(.message)
+        self.stack = try container.`value if present at`(.stack)
+        self.handled = try container.`value at`(.handled)
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: `JSON keys`.self)
+        try container.encode("error", forKey: ._tag)
+        try container.encode(self.id, forKey: .id)
+        try container.encode(self.at, forKey: .at)
+        try container.encode(self.session, forKey: .session)
+        try container.encodeIfPresent(self.user, forKey: .user)
+        try container.encodeIfPresent(self.feature, forKey: .feature)
+        try container.encodeIfPresent(self.screen, forKey: .screen)
+        try container.encode(self.type, forKey: .type)
+        try container.encode(self.message, forKey: .message)
+        try container.encodeIfPresent(self.stack, forKey: .stack)
+        try container.encode(self.handled, forKey: .handled)
+    }
+}
+
 public nonisolated struct EventTracked: Codable, Hashable, Sendable {
     public let id: String
     public let at: Date
     public let session: String
     public let user: String?
     public let feature: String?
+    public let screen: String?
     public let name: String
     public let properties: [String: JSONValue]?
 
@@ -528,6 +707,7 @@ public nonisolated struct EventTracked: Codable, Hashable, Sendable {
         session: String,
         user: String? = nil,
         feature: String? = nil,
+        screen: String? = nil,
         name: String,
         properties: [String: JSONValue]? = nil,
     ) {
@@ -536,6 +716,7 @@ public nonisolated struct EventTracked: Codable, Hashable, Sendable {
         self.session = session
         self.user = user
         self.feature = feature
+        self.screen = screen
         self.name = name
         self.properties = properties
     }
@@ -547,6 +728,7 @@ public nonisolated struct EventTracked: Codable, Hashable, Sendable {
         case session = "session"
         case user = "user"
         case feature = "feature"
+        case screen = "screen"
         case name = "name"
         case properties = "properties"
     }
@@ -561,6 +743,7 @@ public nonisolated struct EventTracked: Codable, Hashable, Sendable {
         self.session = try container.`value at`(.session)
         self.user = try container.`value if present at`(.user)
         self.feature = try container.`value if present at`(.feature)
+        self.screen = try container.`value if present at`(.screen)
         self.name = try container.`value at`(.name)
         self.properties = try container.`value if present at`(.properties)
     }
@@ -573,6 +756,7 @@ public nonisolated struct EventTracked: Codable, Hashable, Sendable {
         try container.encode(self.session, forKey: .session)
         try container.encodeIfPresent(self.user, forKey: .user)
         try container.encodeIfPresent(self.feature, forKey: .feature)
+        try container.encodeIfPresent(self.screen, forKey: .screen)
         try container.encode(self.name, forKey: .name)
         try container.encodeIfPresent(self.properties, forKey: .properties)
     }
@@ -654,6 +838,184 @@ public nonisolated struct MetricKitReport: Codable, Hashable, Sendable {
         try container.encode(self.at, forKey: .at)
         try container.encode(self.report, forKey: .report)
         try container.encode(self.payload, forKey: .payload)
+    }
+}
+
+/// One of a set of values; a value this client doesn't know, from a newer API, is kept as it is.
+public nonisolated struct ScreenContent: RawRepresentable, Codable, Hashable, Sendable {
+    public let rawValue: String
+
+    public init(rawValue: String) {
+        self.rawValue = rawValue
+    }
+
+    public static let kept = ScreenContent(rawValue: "kept")
+    public static let fresh = ScreenContent(rawValue: "fresh")
+}
+
+public nonisolated struct ScreenLeft: Codable, Hashable, Sendable {
+    public let id: String
+    public let at: Date
+    public let session: String
+    public let user: String?
+    public let feature: String?
+    public let screen: String
+    public let visit: String
+    public let visibleMs: Double
+    public let cpuMs: Double?
+    public let scrollMs: Double?
+    public let hitchMs: Double?
+
+    public init(
+        id: String,
+        at: Date,
+        session: String,
+        user: String? = nil,
+        feature: String? = nil,
+        screen: String,
+        visit: String,
+        visibleMs: Double,
+        cpuMs: Double? = nil,
+        scrollMs: Double? = nil,
+        hitchMs: Double? = nil,
+    ) {
+        self.id = id
+        self.at = at
+        self.session = session
+        self.user = user
+        self.feature = feature
+        self.screen = screen
+        self.visit = visit
+        self.visibleMs = visibleMs
+        self.cpuMs = cpuMs
+        self.scrollMs = scrollMs
+        self.hitchMs = hitchMs
+    }
+
+    private enum `JSON keys`: String, CodingKey {
+        case _tag = "_tag"
+        case id = "id"
+        case at = "at"
+        case session = "session"
+        case user = "user"
+        case feature = "feature"
+        case screen = "screen"
+        case visit = "visit"
+        case visibleMs = "visibleMs"
+        case cpuMs = "cpuMs"
+        case scrollMs = "scrollMs"
+        case hitchMs = "hitchMs"
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: `JSON keys`.self)
+        guard try container.`value at`(._tag) as String == "screen.left" else {
+            throw container.`corruption at`(._tag, "_tag isn't screen.left.")
+        }
+        self.id = try container.`value at`(.id)
+        self.at = try container.`value at`(.at)
+        self.session = try container.`value at`(.session)
+        self.user = try container.`value if present at`(.user)
+        self.feature = try container.`value if present at`(.feature)
+        self.screen = try container.`value at`(.screen)
+        self.visit = try container.`value at`(.visit)
+        self.visibleMs = try container.`value at`(.visibleMs)
+        self.cpuMs = try container.`value if present at`(.cpuMs)
+        self.scrollMs = try container.`value if present at`(.scrollMs)
+        self.hitchMs = try container.`value if present at`(.hitchMs)
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: `JSON keys`.self)
+        try container.encode("screen.left", forKey: ._tag)
+        try container.encode(self.id, forKey: .id)
+        try container.encode(self.at, forKey: .at)
+        try container.encode(self.session, forKey: .session)
+        try container.encodeIfPresent(self.user, forKey: .user)
+        try container.encodeIfPresent(self.feature, forKey: .feature)
+        try container.encode(self.screen, forKey: .screen)
+        try container.encode(self.visit, forKey: .visit)
+        try container.encode(self.visibleMs, forKey: .visibleMs)
+        try container.encodeIfPresent(self.cpuMs, forKey: .cpuMs)
+        try container.encodeIfPresent(self.scrollMs, forKey: .scrollMs)
+        try container.encodeIfPresent(self.hitchMs, forKey: .hitchMs)
+    }
+}
+
+public nonisolated struct ScreenReady: Codable, Hashable, Sendable {
+    public let id: String
+    public let at: Date
+    public let session: String
+    public let user: String?
+    public let feature: String?
+    public let screen: String
+    public let visit: String
+    public let content: ScreenContent
+    public let ms: Double
+
+    public init(
+        id: String,
+        at: Date,
+        session: String,
+        user: String? = nil,
+        feature: String? = nil,
+        screen: String,
+        visit: String,
+        content: ScreenContent,
+        ms: Double,
+    ) {
+        self.id = id
+        self.at = at
+        self.session = session
+        self.user = user
+        self.feature = feature
+        self.screen = screen
+        self.visit = visit
+        self.content = content
+        self.ms = ms
+    }
+
+    private enum `JSON keys`: String, CodingKey {
+        case _tag = "_tag"
+        case id = "id"
+        case at = "at"
+        case session = "session"
+        case user = "user"
+        case feature = "feature"
+        case screen = "screen"
+        case visit = "visit"
+        case content = "content"
+        case ms = "ms"
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: `JSON keys`.self)
+        guard try container.`value at`(._tag) as String == "screen.ready" else {
+            throw container.`corruption at`(._tag, "_tag isn't screen.ready.")
+        }
+        self.id = try container.`value at`(.id)
+        self.at = try container.`value at`(.at)
+        self.session = try container.`value at`(.session)
+        self.user = try container.`value if present at`(.user)
+        self.feature = try container.`value if present at`(.feature)
+        self.screen = try container.`value at`(.screen)
+        self.visit = try container.`value at`(.visit)
+        self.content = try container.`value at`(.content)
+        self.ms = try container.`value at`(.ms)
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: `JSON keys`.self)
+        try container.encode("screen.ready", forKey: ._tag)
+        try container.encode(self.id, forKey: .id)
+        try container.encode(self.at, forKey: .at)
+        try container.encode(self.session, forKey: .session)
+        try container.encodeIfPresent(self.user, forKey: .user)
+        try container.encodeIfPresent(self.feature, forKey: .feature)
+        try container.encode(self.screen, forKey: .screen)
+        try container.encode(self.visit, forKey: .visit)
+        try container.encode(self.content, forKey: .content)
+        try container.encode(self.ms, forKey: .ms)
     }
 }
 
@@ -749,6 +1111,7 @@ public nonisolated struct SessionEnded: Codable, Hashable, Sendable {
     public let session: String
     public let user: String?
     public let feature: String?
+    public let screen: String?
     public let foregroundMs: Double
 
     public init(
@@ -757,6 +1120,7 @@ public nonisolated struct SessionEnded: Codable, Hashable, Sendable {
         session: String,
         user: String? = nil,
         feature: String? = nil,
+        screen: String? = nil,
         foregroundMs: Double,
     ) {
         self.id = id
@@ -764,6 +1128,7 @@ public nonisolated struct SessionEnded: Codable, Hashable, Sendable {
         self.session = session
         self.user = user
         self.feature = feature
+        self.screen = screen
         self.foregroundMs = foregroundMs
     }
 
@@ -774,6 +1139,7 @@ public nonisolated struct SessionEnded: Codable, Hashable, Sendable {
         case session = "session"
         case user = "user"
         case feature = "feature"
+        case screen = "screen"
         case foregroundMs = "foregroundMs"
     }
 
@@ -787,6 +1153,7 @@ public nonisolated struct SessionEnded: Codable, Hashable, Sendable {
         self.session = try container.`value at`(.session)
         self.user = try container.`value if present at`(.user)
         self.feature = try container.`value if present at`(.feature)
+        self.screen = try container.`value if present at`(.screen)
         self.foregroundMs = try container.`value at`(.foregroundMs)
     }
 
@@ -798,6 +1165,7 @@ public nonisolated struct SessionEnded: Codable, Hashable, Sendable {
         try container.encode(self.session, forKey: .session)
         try container.encodeIfPresent(self.user, forKey: .user)
         try container.encodeIfPresent(self.feature, forKey: .feature)
+        try container.encodeIfPresent(self.screen, forKey: .screen)
         try container.encode(self.foregroundMs, forKey: .foregroundMs)
     }
 }
@@ -808,6 +1176,7 @@ public nonisolated struct SessionStarted: Codable, Hashable, Sendable {
     public let session: String
     public let user: String?
     public let feature: String?
+    public let screen: String?
 
     public init(
         id: String,
@@ -815,12 +1184,14 @@ public nonisolated struct SessionStarted: Codable, Hashable, Sendable {
         session: String,
         user: String? = nil,
         feature: String? = nil,
+        screen: String? = nil,
     ) {
         self.id = id
         self.at = at
         self.session = session
         self.user = user
         self.feature = feature
+        self.screen = screen
     }
 
     private enum `JSON keys`: String, CodingKey {
@@ -830,6 +1201,7 @@ public nonisolated struct SessionStarted: Codable, Hashable, Sendable {
         case session = "session"
         case user = "user"
         case feature = "feature"
+        case screen = "screen"
     }
 
     public init(from decoder: any Decoder) throws {
@@ -842,6 +1214,7 @@ public nonisolated struct SessionStarted: Codable, Hashable, Sendable {
         self.session = try container.`value at`(.session)
         self.user = try container.`value if present at`(.user)
         self.feature = try container.`value if present at`(.feature)
+        self.screen = try container.`value if present at`(.screen)
     }
 
     public func encode(to encoder: any Encoder) throws {
@@ -852,6 +1225,78 @@ public nonisolated struct SessionStarted: Codable, Hashable, Sendable {
         try container.encode(self.session, forKey: .session)
         try container.encodeIfPresent(self.user, forKey: .user)
         try container.encodeIfPresent(self.feature, forKey: .feature)
+        try container.encodeIfPresent(self.screen, forKey: .screen)
+    }
+}
+
+public nonisolated struct TimingMeasured: Codable, Hashable, Sendable {
+    public let id: String
+    public let at: Date
+    public let session: String
+    public let user: String?
+    public let feature: String?
+    public let screen: String?
+    public let name: String
+    public let ms: Double
+
+    public init(
+        id: String,
+        at: Date,
+        session: String,
+        user: String? = nil,
+        feature: String? = nil,
+        screen: String? = nil,
+        name: String,
+        ms: Double,
+    ) {
+        self.id = id
+        self.at = at
+        self.session = session
+        self.user = user
+        self.feature = feature
+        self.screen = screen
+        self.name = name
+        self.ms = ms
+    }
+
+    private enum `JSON keys`: String, CodingKey {
+        case _tag = "_tag"
+        case id = "id"
+        case at = "at"
+        case session = "session"
+        case user = "user"
+        case feature = "feature"
+        case screen = "screen"
+        case name = "name"
+        case ms = "ms"
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: `JSON keys`.self)
+        guard try container.`value at`(._tag) as String == "timing" else {
+            throw container.`corruption at`(._tag, "_tag isn't timing.")
+        }
+        self.id = try container.`value at`(.id)
+        self.at = try container.`value at`(.at)
+        self.session = try container.`value at`(.session)
+        self.user = try container.`value if present at`(.user)
+        self.feature = try container.`value if present at`(.feature)
+        self.screen = try container.`value if present at`(.screen)
+        self.name = try container.`value at`(.name)
+        self.ms = try container.`value at`(.ms)
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: `JSON keys`.self)
+        try container.encode("timing", forKey: ._tag)
+        try container.encode(self.id, forKey: .id)
+        try container.encode(self.at, forKey: .at)
+        try container.encode(self.session, forKey: .session)
+        try container.encodeIfPresent(self.user, forKey: .user)
+        try container.encodeIfPresent(self.feature, forKey: .feature)
+        try container.encodeIfPresent(self.screen, forKey: .screen)
+        try container.encode(self.name, forKey: .name)
+        try container.encode(self.ms, forKey: .ms)
     }
 }
 

@@ -342,7 +342,342 @@
           },
           {
             "$ref": "#/components/schemas/MetricKitReport"
+          },
+          {
+            "$ref": "#/components/schemas/ScreenReady"
+          },
+          {
+            "$ref": "#/components/schemas/ScreenLeft"
+          },
+          {
+            "$ref": "#/components/schemas/AppHang"
+          },
+          {
+            "$ref": "#/components/schemas/ErrorRecorded"
+          },
+          {
+            "$ref": "#/components/schemas/TimingMeasured"
           }
+        ]
+      },
+      "TimingMeasured": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "timing"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "session": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AppUserId"
+          },
+          "feature": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "screen": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^\\S[\\s\\S]*\\S$|^\\S$|^$",
+            "allOf": [
+              {
+                "pattern": "^\\P{Cc}*$"
+              }
+            ]
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^\\S[\\s\\S]*\\S$|^\\S$|^$",
+            "allOf": [
+              {
+                "pattern": "^\\P{Cc}*$"
+              }
+            ]
+          },
+          "ms": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "_tag",
+          "id",
+          "at",
+          "session",
+          "name",
+          "ms"
+        ],
+        "additionalProperties": false
+      },
+      "AppUserId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "ErrorRecorded": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "error"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "session": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AppUserId"
+          },
+          "feature": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "screen": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^\\S[\\s\\S]*\\S$|^\\S$|^$",
+            "allOf": [
+              {
+                "pattern": "^\\P{Cc}*$"
+              }
+            ]
+          },
+          "type": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^\\P{Cc}+$"
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 1024
+          },
+          "stack": {
+            "type": "string",
+            "maxLength": 16384
+          },
+          "handled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "_tag",
+          "id",
+          "at",
+          "session",
+          "type",
+          "message",
+          "handled"
+        ],
+        "additionalProperties": false
+      },
+      "AppHang": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "app.hang"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "session": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AppUserId"
+          },
+          "feature": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "screen": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^\\S[\\s\\S]*\\S$|^\\S$|^$",
+            "allOf": [
+              {
+                "pattern": "^\\P{Cc}*$"
+              }
+            ]
+          },
+          "ms": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "_tag",
+          "id",
+          "at",
+          "session",
+          "ms"
+        ],
+        "additionalProperties": false
+      },
+      "ScreenLeft": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "screen.left"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "session": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AppUserId"
+          },
+          "feature": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "screen": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^\\S[\\s\\S]*\\S$|^\\S$|^$",
+            "allOf": [
+              {
+                "pattern": "^\\P{Cc}*$"
+              }
+            ]
+          },
+          "visit": {
+            "type": "string"
+          },
+          "visibleMs": {
+            "type": "number",
+            "minimum": 0
+          },
+          "cpuMs": {
+            "type": "number",
+            "minimum": 0
+          },
+          "scrollMs": {
+            "type": "number",
+            "minimum": 0
+          },
+          "hitchMs": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "_tag",
+          "id",
+          "at",
+          "session",
+          "screen",
+          "visit",
+          "visibleMs"
+        ],
+        "additionalProperties": false
+      },
+      "ScreenReady": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "screen.ready"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "session": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AppUserId"
+          },
+          "feature": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "screen": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^\\S[\\s\\S]*\\S$|^\\S$|^$",
+            "allOf": [
+              {
+                "pattern": "^\\P{Cc}*$"
+              }
+            ]
+          },
+          "visit": {
+            "type": "string"
+          },
+          "content": {
+            "$ref": "#/components/schemas/ScreenContent"
+          },
+          "ms": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "_tag",
+          "id",
+          "at",
+          "session",
+          "screen",
+          "visit",
+          "content",
+          "ms"
+        ],
+        "additionalProperties": false
+      },
+      "ScreenContent": {
+        "type": "string",
+        "enum": [
+          "kept",
+          "fresh"
         ]
       },
       "MetricKitReport": {
@@ -408,6 +743,17 @@
             "type": "string",
             "maxLength": 100
           },
+          "screen": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^\\S[\\s\\S]*\\S$|^\\S$|^$",
+            "allOf": [
+              {
+                "pattern": "^\\P{Cc}*$"
+              }
+            ]
+          },
           "name": {
             "type": "string",
             "minLength": 1,
@@ -431,11 +777,6 @@
           "name"
         ],
         "additionalProperties": false
-      },
-      "AppUserId": {
-        "type": "string",
-        "minLength": 1,
-        "maxLength": 128
       },
       "ScreenShown": {
         "type": "object",
@@ -510,6 +851,17 @@
             "type": "string",
             "maxLength": 100
           },
+          "screen": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^\\S[\\s\\S]*\\S$|^\\S$|^$",
+            "allOf": [
+              {
+                "pattern": "^\\P{Cc}*$"
+              }
+            ]
+          },
           "reason": {
             "$ref": "#/components/schemas/MemoryReason"
           },
@@ -568,6 +920,17 @@
           "feature": {
             "type": "string",
             "maxLength": 100
+          },
+          "screen": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^\\S[\\s\\S]*\\S$|^\\S$|^$",
+            "allOf": [
+              {
+                "pattern": "^\\P{Cc}*$"
+              }
+            ]
           },
           "start": {
             "$ref": "#/components/schemas/LaunchStart"
@@ -628,6 +991,17 @@
             "type": "string",
             "maxLength": 100
           },
+          "screen": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^\\S[\\s\\S]*\\S$|^\\S$|^$",
+            "allOf": [
+              {
+                "pattern": "^\\P{Cc}*$"
+              }
+            ]
+          },
           "foregroundMs": {
             "type": "number",
             "minimum": 0
@@ -667,6 +1041,17 @@
           "feature": {
             "type": "string",
             "maxLength": 100
+          },
+          "screen": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^\\S[\\s\\S]*\\S$|^\\S$|^$",
+            "allOf": [
+              {
+                "pattern": "^\\P{Cc}*$"
+              }
+            ]
           }
         },
         "required": [
@@ -747,7 +1132,10 @@
           "macOS",
           "visionOS",
           "watchOS",
-          "tvOS"
+          "tvOS",
+          "web",
+          "linux",
+          "windows"
         ]
       }
     },

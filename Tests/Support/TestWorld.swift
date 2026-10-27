@@ -97,6 +97,11 @@ extension AppSignal {
         case .screen: "screen"
         case .event: "event"
         case .metrickit: "metrickit"
+        case .screenReady: "screen.ready"
+        case .screenLeft: "screen.left"
+        case .appHang: "app.hang"
+        case .error: "error"
+        case .timing: "timing"
         case .unknown(let kind): kind
         }
     }
@@ -111,6 +116,11 @@ extension AppSignal {
         case .screen(let signal): signal.id
         case .event(let signal): signal.id
         case .metrickit(let signal): signal.id
+        case .screenReady(let signal): signal.id
+        case .screenLeft(let signal): signal.id
+        case .appHang(let signal): signal.id
+        case .error(let signal): signal.id
+        case .timing(let signal): signal.id
         case .unknown: nil
         }
     }
@@ -124,6 +134,11 @@ extension AppSignal {
         case .appMemory(let signal): signal.session
         case .screen(let signal): signal.session
         case .event(let signal): signal.session
+        case .screenReady(let signal): signal.session
+        case .screenLeft(let signal): signal.session
+        case .appHang(let signal): signal.session
+        case .error(let signal): signal.session
+        case .timing(let signal): signal.session
         case .metrickit, .unknown: nil
         }
     }
@@ -137,6 +152,29 @@ extension AppSignal {
         case .appMemory(let signal): signal.user
         case .screen(let signal): signal.user
         case .event(let signal): signal.user
+        case .screenReady(let signal): signal.user
+        case .screenLeft(let signal): signal.user
+        case .appHang(let signal): signal.user
+        case .error(let signal): signal.user
+        case .timing(let signal): signal.user
+        case .metrickit, .unknown: nil
+        }
+    }
+
+    /// The screen it was recorded on.
+    package var screen: String? {
+        switch self {
+        case .sessionStarted(let signal): signal.screen
+        case .sessionEnded(let signal): signal.screen
+        case .appLaunched(let signal): signal.screen
+        case .appMemory(let signal): signal.screen
+        case .screen(let signal): signal.screen
+        case .event(let signal): signal.screen
+        case .screenReady(let signal): signal.screen
+        case .screenLeft(let signal): signal.screen
+        case .appHang(let signal): signal.screen
+        case .error(let signal): signal.screen
+        case .timing(let signal): signal.screen
         case .metrickit, .unknown: nil
         }
     }
@@ -150,6 +188,11 @@ extension AppSignal {
         case .appMemory(let signal): signal.feature
         case .screen(let signal): signal.feature
         case .event(let signal): signal.feature
+        case .screenReady(let signal): signal.feature
+        case .screenLeft(let signal): signal.feature
+        case .appHang(let signal): signal.feature
+        case .error(let signal): signal.feature
+        case .timing(let signal): signal.feature
         case .metrickit, .unknown: nil
         }
     }
