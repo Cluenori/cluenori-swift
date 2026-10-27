@@ -54,21 +54,14 @@ enum Analytics {
             .event(
                 EventTracked(
                     id: stamp.id, at: stamp.at, session: stamp.session, user: stamp.user, feature: stamp.feature,
-                    name: name, properties: kept.isEmpty ? nil : kept))
+                    screen: stamp.screen, name: name, properties: kept.isEmpty ? nil : kept))
         }
     }
 
+    /// A new visit of screen `name`: what the person sees from now on, until the next screen, so every
+    /// signal recorded meanwhile says it happened there.
     static func screen(_ name: String, on engine: Engine) {
-        guard TextRules.isName(name) else {
-            engine.misuse("\"\(name)\" isn't a screen's name: 1 to 256 characters, such as profile.edit.")
-            return
-        }
-        engine.record { stamp in
-            .screen(
-                ScreenShown(
-                    id: stamp.id, at: stamp.at, session: stamp.session, user: stamp.user, feature: stamp.feature,
-                    screen: name))
-        }
+        engine.show(screen: name)
     }
 
     /// The properties the contract takes, and what is wrong with each it doesn't: a key that isn't

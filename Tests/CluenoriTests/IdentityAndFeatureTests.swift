@@ -10,9 +10,9 @@ struct IdentityTests {
         let world = TestWorld()
         let engine = world.launch()
         engine.foreground()
-        engine.recordScreen("sign-in")
+        engine.show(screen: "sign-in")
         engine.identify("u_123")
-        engine.recordScreen("feed")
+        engine.show(screen: "feed")
         await engine.flush()
         #expect(world.deployment.signals.map(\.user) == [nil, nil, "u_123"])
     }
@@ -35,7 +35,7 @@ struct IdentityTests {
         engine.foreground()
         world.clock.advance(30)
         engine.reset()
-        engine.recordScreen("sign-in")
+        engine.show(screen: "sign-in")
         await engine.flush()
         let signals = world.deployment.signals
         #expect(signals.map(\.kind) == ["session.started", "session.ended", "session.started", "screen"])
@@ -62,14 +62,14 @@ struct FeatureTests {
         let engine = world.launch()
         engine.foreground()
         let cards = engine.begin(feature: "cards")
-        engine.recordScreen("cards")
+        engine.show(screen: "cards")
         let flip = engine.begin(feature: "cards.flip")
-        engine.recordScreen("flip")
+        engine.show(screen: "flip")
         flip.end()
         flip.end()
-        engine.recordScreen("cards.again")
+        engine.show(screen: "cards.again")
         cards.end()
-        engine.recordScreen("home")
+        engine.show(screen: "home")
         await engine.flush()
         #expect(world.deployment.signals.map(\.feature) == [nil, "cards", "cards.flip", "cards", nil])
     }
@@ -81,9 +81,9 @@ struct FeatureTests {
         let mark = engine.begin(feature: "cards")
         await engine.feature("cards.export") {
             try? await Task.sleep(for: .milliseconds(1))
-            engine.recordScreen("export")
+            engine.show(screen: "export")
         }
-        engine.feature("cards.share") { engine.recordScreen("share") }
+        engine.feature("cards.share") { _ = engine.show(screen: "share") }
         mark.end()
         await engine.flush()
         #expect(world.deployment.signals.map(\.feature) == [nil, "cards.export", "cards.share"])

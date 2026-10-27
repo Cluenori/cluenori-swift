@@ -197,15 +197,3 @@ extension AppSignal {
         }
     }
 }
-
-extension Engine {
-    /// Records a screen, as the analytics module does: a signal for core tests to follow.
-    package func recordScreen(_ name: String) {
-        record { stamp in
-            .screen(
-                ScreenShown(
-                    id: stamp.id, at: stamp.at, session: stamp.session, user: stamp.user, feature: stamp.feature,
-                    screen: name))
-        }
-    }
-}

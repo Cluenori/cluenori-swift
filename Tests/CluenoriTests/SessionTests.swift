@@ -138,9 +138,9 @@ struct EngineSessionTests {
     @Test func `signals recorded in a session carry its ID, and none are recorded without one`() async throws {
         let world = TestWorld()
         let engine = world.launch()
-        engine.recordScreen("before")
+        engine.show(screen: "before")
         engine.foreground()
-        engine.recordScreen("card")
+        engine.show(screen: "card")
         await engine.flush()
         let signals = world.deployment.signals
         #expect(signals.map(\.kind) == ["session.started", "screen"])

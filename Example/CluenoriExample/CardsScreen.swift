@@ -49,9 +49,8 @@ struct CardsScreen: View {
         }
         .cluenoriFeature("cards")
         .cluenoriScreen("cards")
-        .task {
-            Cluenori.appReady()
-        }
+        // The cards are the app's own, so they show at once: the screen is ready from what it keeps.
+        .cluenoriScreenReady(.kept, when: true)
     }
 
     private func flip(_ card: Card) {

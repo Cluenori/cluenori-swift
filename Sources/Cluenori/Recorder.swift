@@ -10,6 +10,8 @@ package struct SignalStamp: Sendable {
     package let session: String
     package let user: String?
     package let feature: String?
+    /// The screen shown when it was recorded, as the app names it.
+    package let screen: String?
 }
 
 /// Makes a signal of a session from its stamp.
@@ -18,12 +20,12 @@ package typealias SignalBuilder = @Sendable (SignalStamp) -> AppSignal
 /// One thing the app did that the SDK records or remembers, taken in the order the app did it.
 enum Command: Sendable {
     /// A signal of the session open now, recorded at `at` in `feature`.
-    case record(at: Date, feature: String?, build: SignalBuilder)
+    case record(at: Date, feature: String?, screen: String?, build: SignalBuilder)
     /// A signal of no session, such as MetricKit's report.
     case recordUnscoped(at: Date, build: @Sendable (_ id: String, _ at: Date) -> AppSignal)
     /// A signal of the session open now, recorded only when it ends; `key`'s last one replaces those
     /// before it.
-    case hold(key: String, at: Date, feature: String?, build: SignalBuilder)
+    case hold(key: String, at: Date, feature: String?, screen: String?, build: SignalBuilder)
     case lifecycle(SessionEvent)
     case identify(String)
     case reset(at: Date)
@@ -95,24 +97,24 @@ actor Recorder {
     /// Does `command`; true when enough was recorded that sending shouldn't wait.
     func handle(_ command: Command) async -> Bool {
         switch command {
-        case .record(let at, let feature, let build):
+        case .record(let at, let feature, let screen, let build):
             await endIfTimedOut(at: at)
             guard collecting, let session = state.session else {
                 logger.debug("A signal recorded without a session, or without consent, is dropped.")
                 return false
             }
             let stamp = SignalStamp(
-                id: ids.make(at: at), at: at, session: session.id, user: state.user, feature: feature)
+                id: ids.make(at: at), at: at, session: session.id, user: state.user, feature: feature, screen: screen)
             await append(build(stamp), to: session.origin)
             state.session?.lastSeenAt = max(session.lastSeenAt, at)
         case .recordUnscoped(let at, let build):
             guard collecting else { return false }
             await append(build(ids.make(at: at), at), to: origin)
-        case .hold(let key, let at, let feature, let build):
+        case .hold(let key, let at, let feature, let screen, let build):
             await endIfTimedOut(at: at)
             guard collecting, let session = state.session else { return false }
             let stamp = SignalStamp(
-                id: ids.make(at: at), at: at, session: session.id, user: state.user, feature: feature)
+                id: ids.make(at: at), at: at, session: session.id, user: state.user, feature: feature, screen: screen)
             state.session?.held[key] = build(stamp)
             persist()
         case .lifecycle(let event):

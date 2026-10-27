@@ -12,7 +12,7 @@ struct DeliveryTests {
         let world = TestWorld()
         let engine = world.launch()
         engine.foreground()
-        for index in 0..<120 { engine.recordScreen("screen.\(index)") }
+        for index in 0..<120 { engine.show(screen: "screen.\(index)") }
         await engine.flush()
 
         let batches = world.deployment.batches
@@ -23,7 +23,7 @@ struct DeliveryTests {
         #expect(batch.environment == "production")
         #expect(batch.release == "0.3.0+20")
         #expect(batch.device.model == "iPhone18,1")
-        #expect(batch.sdk == AppSdk(name: "cluenori-swift", version: "0.1.0"))
+        #expect(batch.sdk == AppSdk(name: "cluenori-swift", version: "0.2.0"))
         #expect(world.deployment.authorizations == ["Bearer cluenori.sdk.notes-ios.secret"])
         #expect(Set(world.deployment.signals.compactMap(\.id)).count == 121)
     }
@@ -64,7 +64,7 @@ struct DeliveryTests {
         world.deployment.setOffline(true)
         let engine = world.launch()
         engine.foreground()
-        engine.recordScreen("card")
+        engine.show(screen: "card")
         await engine.flush()
         #expect(world.deployment.batches.isEmpty)
 
@@ -79,7 +79,7 @@ struct DeliveryTests {
 
         // Sent again, as when the answer was lost, the same IDs go, so the deployment counts them once.
         world.deployment.answerBatches(status: 503, body: "")
-        engine.recordScreen("profile")
+        engine.show(screen: "profile")
         await engine.flush()
         world.deployment.answerBatches { batch in (200, #"{"accepted":\#(batch.signals.count),"duplicates":0}"#) }
         world.clock.advance(5)
@@ -124,7 +124,7 @@ struct DeliveryTests {
         #expect(world.deployment.attempts.count == 1)
 
         world.deployment.answerBatches { batch in (200, #"{"accepted":\#(batch.signals.count),"duplicates":0}"#) }
-        engine.recordScreen("card")
+        engine.show(screen: "card")
         world.clock.advance(3600)
         await engine.flush()
         #expect(world.deployment.attempts.count == 1)
@@ -147,7 +147,7 @@ struct DeliveryTests {
         }
         let engine = world.launch()
         engine.foreground()
-        for index in 0..<6 { engine.recordScreen("screen.\(index)") }
+        for index in 0..<6 { engine.show(screen: "screen.\(index)") }
         await engine.flush()
 
         let attempts = world.deployment.attempts
@@ -170,9 +170,9 @@ struct DeliveryTests {
         }
         let engine = world.launch()
         engine.foreground()
-        engine.recordScreen("good")
-        engine.recordScreen("bad")
-        engine.recordScreen("fine")
+        engine.show(screen: "good")
+        engine.show(screen: "bad")
+        engine.show(screen: "fine")
         await engine.flush()
         let screens = world.deployment.signals.compactMap { signal -> String? in
             if case .screen(let screen) = signal { return screen.screen }
@@ -185,7 +185,7 @@ struct DeliveryTests {
         let world = TestWorld()
         let engine = world.launch(start: false)
         engine.foreground()
-        engine.recordScreen("card")
+        engine.show(screen: "card")
         await engine.flush()
         #expect(world.deployment.attempts.isEmpty)
     }

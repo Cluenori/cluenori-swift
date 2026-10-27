@@ -90,6 +90,7 @@ package final class Engine: Sendable {
 
     package let dependencies: Dependencies
     let features = Features()
+    package let screens = Screens()
     @MainActor package let gate: UpdateGate
 
     /// The parts made by `start`, once there.
@@ -119,7 +120,7 @@ package final class Engine: Sendable {
     static let waitingSignalsLimit = 1_000
     private let logger = Logger(subsystem: "com.cluenori.sdk", category: "engine")
 
-    package static let sdk = AppSdk(name: "cluenori-swift", version: "0.1.0")
+    package static let sdk = AppSdk(name: "cluenori-swift", version: "0.2.0")
 
     package init(dependencies: Dependencies) {
         self.dependencies = dependencies
@@ -292,7 +293,8 @@ package final class Engine: Sendable {
     /// Records a signal of the session open now, stamped in the order of the app's calls. Without a
     /// session, as when the app was launched in the background, it is dropped.
     package func record(_ build: @escaping SignalBuilder) {
-        sendSignal(.record(at: dependencies.now(), feature: features.current, build: build))
+        sendSignal(
+            .record(at: dependencies.now(), feature: features.current, screen: screens.current?.name, build: build))
     }
 
     /// Records a signal of no session, such as MetricKit's report.
@@ -303,7 +305,10 @@ package final class Engine: Sendable {
     /// Keeps a signal of the session open now, to record when it ends; a later one for `key`
     /// replaces it.
     package func hold(_ key: String, _ build: @escaping SignalBuilder) {
-        sendSignal(.hold(key: key, at: dependencies.now(), feature: features.current, build: build))
+        sendSignal(
+            .hold(
+                key: key, at: dependencies.now(), feature: features.current, screen: screens.current?.name, build: build
+            ))
     }
 
     func foreground() { send(.lifecycle(.foreground(dependencies.now()))) }
@@ -320,7 +325,16 @@ package final class Engine: Sendable {
         send(.identify(user))
     }
 
-    func reset() { send(.reset(at: dependencies.now())) }
+    /// The person signed out: the session ends and the next starts. The screen in sight ends its visit
+    /// in the session that ends, and goes on as a new visit in the next.
+    // Not handled: a reset while the app is in the background, which signing out isn't; the visit's
+    // measures then go on into the next session, which takes the screens knowing the foreground.
+    func reset() {
+        let visit = screens.current.map { newVisit(of: $0.name) }
+        if let visit { _ = screens.show(visit) }
+        send(.reset(at: dependencies.now()))
+        if let visit { recordShown(visit) }
+    }
 
     func consent(_ analytics: AnalyticsConsent) { send(.consent(analytics, at: dependencies.now())) }
 
@@ -450,6 +464,34 @@ package final class Engine: Sendable {
         running.withLock { running in
             running?.backgroundTick?.cancel()
             running?.backgroundTick = tick
+        }
+    }
+
+    /// Marks screen `name` shown now, a new visit of it: tells the screens' observers, then records
+    /// its `screen` signal. Nil, with what is wrong said, for a name that isn't one.
+    @discardableResult
+    package func show(screen name: String) -> ScreenVisit? {
+        guard TextRules.isName(name) else {
+            misuse("\"\(name)\" isn't a screen's name: 1 to 256 characters, such as profile.edit.")
+            return nil
+        }
+        let visit = screens.show(newVisit(of: name))
+        recordShown(visit)
+        return visit
+    }
+
+    private func newVisit(of name: String) -> ScreenVisit {
+        let now = dependencies.now()
+        return ScreenVisit(id: dependencies.ids.make(at: now), name: name, appearedAt: now)
+    }
+
+    /// The `screen` signal of `visit`, whose ID is the visit's.
+    private func recordShown(_ visit: ScreenVisit) {
+        record { stamp in
+            .screen(
+                ScreenShown(
+                    id: visit.id, at: stamp.at, session: stamp.session, user: stamp.user, feature: stamp.feature,
+                    screen: visit.name))
         }
     }
 

@@ -17,9 +17,9 @@ struct RobustnessTests {
         let engine = world.launch()
         engine.identify("u_1")
         engine.foreground()
-        for index in 0..<3000 { engine.recordScreen("before.\(index)") }
+        for index in 0..<3000 { engine.show(screen: "before.\(index)") }
         engine.reset()
-        for index in 0..<3000 { engine.recordScreen("after.\(index)") }
+        for index in 0..<3000 { engine.show(screen: "after.\(index)") }
         await engine.flush()
 
         let signals = world.deployment.signals
@@ -40,8 +40,8 @@ struct RobustnessTests {
         }
         let engine = world.launch()
         engine.foreground()
-        engine.recordScreen("bad")
-        for index in 0..<300 { engine.recordScreen("good.\(index)") }
+        engine.show(screen: "bad")
+        for index in 0..<300 { engine.show(screen: "good.\(index)") }
         await engine.flush()
         #expect(world.deployment.signals.count == 301)
         #expect(world.deployment.attempts.count < 30)
@@ -65,7 +65,7 @@ struct RobustnessTests {
         engine.foreground()
         engine.background()
         world.clock.advance(31)
-        engine.recordScreen("late")
+        engine.show(screen: "late")
         await engine.flush()
         #expect(world.deployment.signals.map(\.kind) == ["session.started", "session.ended"])
     }
@@ -84,7 +84,7 @@ struct RobustnessTests {
 
         let locked = world.launch(wait: { _ in try await Task.sleep(for: .milliseconds(20)) })
         locked.foreground()
-        locked.recordScreen("while locked")
+        locked.show(screen: "while locked")
         try await Task.sleep(for: .milliseconds(100))
         try FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: state)
         await locked.flush()

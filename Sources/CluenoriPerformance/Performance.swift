@@ -19,6 +19,23 @@ extension Cluenori {
         PerformanceMonitor.shared.start()
     }
 
+    /// Says the screen shown now has its first content of this kind: `.kept`, drawn from what the
+    /// device kept, or `.fresh`, from the network. How long that took since the screen appeared is
+    /// recorded, once of each kind for each visit; the first of the launch is also its `appReady()`.
+    ///
+    /// ```swift
+    /// FeedView(model: model)
+    ///     .cluenoriScreen("feed")
+    ///     .cluenoriScreenReady(.kept, when: !model.posts.isEmpty)
+    ///     .cluenoriScreenReady(.fresh, when: model.loadedFromNetwork)
+    /// ```
+    public static func screenReady(_ readiness: ScreenReadiness) {
+        let engine = Engine.shared
+        let at = engine.now
+        let visit = engine.screens.current
+        Task { @MainActor in PerformanceMonitor.shared.screenReady(readiness.content, of: visit, at: at) }
+    }
+
     /// Says the app's first useful screen shows, such as the feed with its first page: the launch is
     /// timed to here as well as to its first frame. Only the first call of a launch counts; one more
     /// than 30 s after the first frame comes too late, and the launch is recorded without it.
@@ -51,15 +68,26 @@ final class PerformanceMonitor {
     private var launchRecorded = false
     private var readyTimeout: Task<Void, Never>?
     private var sampling: Task<Void, Never>?
+    /// The visit of the screen shown now, as it is measured.
+    let visits: ScreenVisits
+    private var backgroundSince: Date?
+    private var hangs: HangWatch?
     #if canImport(UIKit)
         private var frameWatch: FirstFrameWatch?
+        private var scrollWatch: ScrollWatch?
     #endif
     #if canImport(MetricKit)
         private var metricKit: MetricKitForwarding?
     #endif
 
-    init(engine: Engine) {
+    init(engine: Engine, inForeground: Bool = false) {
         self.engine = engine
+        #if canImport(UIKit)
+            let measuresScrolling = true
+        #else
+            let measuresScrolling = false
+        #endif
+        visits = ScreenVisits(engine: engine, inForeground: inForeground, measuresScrolling: measuresScrolling)
     }
 
     func start() {
@@ -68,6 +96,22 @@ final class PerformanceMonitor {
             return
         }
         started = true
+        watchScreens()
+        let engine = self.engine
+        let hangs = HangWatch(now: { engine.now }) { ms in
+            engine.record { stamp in
+                .appHang(
+                    AppHang(
+                        id: stamp.id, at: stamp.at, session: stamp.session, user: stamp.user, feature: stamp.feature,
+                        screen: stamp.screen, ms: ms))
+            }
+        }
+        self.hangs = hangs
+        #if canImport(UIKit)
+            scrollWatch = ScrollWatch { [visits] interval, expected in
+                visits.scrolled(interval: interval, expected: expected)
+            }
+        #endif
         #if canImport(MetricKit)
             let forwarding = MetricKitForwarding(engine: engine)
             MXMetricManager.shared.add(forwarding)
@@ -102,8 +146,42 @@ final class PerformanceMonitor {
         if firstFrame != nil { recordLaunch() }
     }
 
+    /// Measures each screen's visit from now on, as CluenoriAnalytics shows them, on the thread that
+    /// shows them.
+    func watchScreens() {
+        engine.screens.observe { [visits] left, shown in visits.shown(left: left, shown: shown) }
+    }
+
+    /// `visit`'s content of this kind shows: recorded the first time, and the launch's ready.
+    func screenReady(_ content: ScreenContent, of visit: ScreenVisit?, at moment: Date) {
+        guard let visit, let ms = visits.readied(content, of: visit, at: moment) else { return }
+        engine.record { stamp in
+            .screenReady(
+                ScreenReady(
+                    id: stamp.id, at: stamp.at, session: stamp.session, user: stamp.user, feature: stamp.feature,
+                    screen: visit.name, visit: visit.id, content: content, ms: ms))
+        }
+        ready(at: moment)
+    }
+
+    /// The app came to the foreground: the visit goes on, unless its session ended meanwhile.
+    func cameToForeground(at moment: Date) {
+        hangs?.resume()
+        let sessionEnded = backgroundSince.map { moment.timeIntervalSince($0) >= sessionTimeout } ?? false
+        backgroundSince = nil
+        visits.cameToForeground(at: moment, sessionEnded: sessionEnded)
+    }
+
+    /// The app left the foreground: the visit as it is now is held, recorded if its session ends.
+    func leftForeground(at moment: Date) {
+        backgroundSince = moment
+        hangs?.pause()
+        visits.leftForeground(at: moment)
+    }
+
     private func becameActive() {
         logger.debug("The app became active.")
+        cameToForeground(at: engine.now)
         #if canImport(UIKit)
             if firstFrame == nil && frameWatch == nil {
                 frameWatch = FirstFrameWatch { [weak self] at in self?.drewFirstFrame(at: at) }
@@ -119,6 +197,7 @@ final class PerformanceMonitor {
     }
 
     private func wentToBackground() {
+        leftForeground(at: engine.now)
         sampling?.cancel()
         sampling = nil
         if firstFrame != nil && !launchRecorded { recordLaunch() }
@@ -165,7 +244,8 @@ final class PerformanceMonitor {
             .appLaunched(
                 AppLaunched(
                     id: stamp.id, at: stamp.at, session: stamp.session, user: stamp.user, feature: stamp.feature,
-                    start: timing.start, prewarmed: timing.prewarmed, firstFrameMs: timing.firstFrameMs,
+                    screen: stamp.screen, start: timing.start, prewarmed: timing.prewarmed,
+                    firstFrameMs: timing.firstFrameMs,
                     readyMs: timing.readyMs))
         }
     }
@@ -180,11 +260,36 @@ final class PerformanceMonitor {
     {
         AppMemory(
             id: stamp.id, at: stamp.at, session: stamp.session, user: stamp.user, feature: stamp.feature,
-            reason: reason, footprintBytes: memory.footprintBytes, peakBytes: memory.peakBytes)
+            screen: stamp.screen, reason: reason, footprintBytes: memory.footprintBytes, peakBytes: memory.peakBytes)
     }
 }
 
 #if canImport(UIKit)
+    /// Times the frames drawn while a scroll view tracks a touch or decelerates, the run loop's
+    /// tracking mode, and only then: at rest it draws nothing and costs nothing. Each frame's interval
+    /// and the interval it was due in go to `frame`; the first frame of a scroll, a while after the
+    /// last, has none.
+    @MainActor
+    private final class ScrollWatch: NSObject {
+        private var link: CADisplayLink?
+        private var last: (timestamp: CFTimeInterval, target: CFTimeInterval)?
+        private let frame: @MainActor (_ intervalMs: Double, _ expectedMs: Double) -> Void
+
+        init(frame: @escaping @MainActor (_ intervalMs: Double, _ expectedMs: Double) -> Void) {
+            self.frame = frame
+            super.init()
+            let link = CADisplayLink(target: self, selector: #selector(tick))
+            link.add(to: .main, forMode: .tracking)
+            self.link = link
+        }
+
+        @objc private func tick(_ link: CADisplayLink) {
+            defer { last = (link.timestamp, link.targetTimestamp) }
+            guard let last, link.timestamp - last.timestamp < 0.5 else { return }
+            frame((link.timestamp - last.timestamp) * 1000, (last.target - last.timestamp) * 1000)
+        }
+    }
+
     /// Waits for the next frame the screen draws, once, and says when: after the app's first
     /// activation, that is its first frame.
     @MainActor

@@ -1,8 +1,8 @@
 # Cluenori for Swift
 
 The SDK that runs inside your iPhone app and reports to your own Cluenori: sessions, events,
-screens, launches, memory and MetricKit's reports, and the update gate that blocks a release you
-no longer support. Apple's frameworks only, MIT-licensed.
+screens and how fast each shows its data, hitches and hangs on each screen, its CPU time, launches,
+memory and MetricKit's reports, and the update gate that blocks a release you no longer support. Apple's frameworks only, MIT-licensed.
 
 ## Add it to your app
 
@@ -13,7 +13,7 @@ In Xcode, File > Add Package Dependencies, and enter `https://github.com/Cluenor
 Or, in a `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/Cluenori/cluenori-swift", from: "0.1.0"),
+.package(url: "https://github.com/Cluenori/cluenori-swift", from: "0.2.0"),
 // and in your target:
 .product(name: "Cluenori", package: "cluenori-swift"),
 .product(name: "CluenoriUpdateGate", package: "cluenori-swift"),
@@ -32,7 +32,7 @@ Then link the libraries you want:
 | `Cluenori` | Start, the installation, sessions, identify, consent, features, the manifest and the update gate's decision, the queue, and headers for your API | Every app needs it |
 | `CluenoriUpdateGate` | The gate's views: "Update to continue", the update sheet, the device notice | App size |
 | `CluenoriAnalytics` | `track` and `cluenoriScreen` | It changes your app's privacy label |
-| `CluenoriPerformance` | Launch times, memory, MetricKit's daily reports | It subscribes to MetricKit |
+| `CluenoriPerformance` | Launch times, how fast each screen shows its data, hitches and hangs, CPU time and memory, MetricKit's daily reports | It subscribes to MetricKit, and watches the main thread |
 
 ## Quick start
 
@@ -89,7 +89,12 @@ ProfileView().cluenoriScreen("profile")    // or Cluenori.screen("profile") from
 
 // CluenoriPerformance
 Cluenori.measurePerformance()              // once, right after start
-Cluenori.appReady()                        // when the first useful screen shows: the launch is timed to it
+FeedView(model: model)
+    .cluenoriScreen("feed")
+    .cluenoriScreenReady(.kept, when: !model.posts.isEmpty)    // its first content from what the phone kept
+    .cluenoriScreenReady(.fresh, when: model.loadedFromNetwork) // and from the network
+Cluenori.screenReady(.fresh)               // the same from UIKit, for the screen shown now
+Cluenori.appReady()                        // the launch is timed to it; the first screenReady does it too
 
 // The update gate, headless, for apps that draw their own
 switch Cluenori.updatePrompt {             // observable: a SwiftUI view reading it follows each manifest
@@ -143,11 +148,15 @@ localizations.
 | `session.started`, `session.ended` | The app starts in or comes to the foreground; 30 s after it leaves it, or at the next launch if it was terminated | The session, its foreground time |
 | `screen`, `event` (CluenoriAnalytics) | `cluenoriScreen`, `track` | The name, the properties you gave |
 | `app.launched` (CluenoriPerformance) | Once a launch's first frame is drawn, and `appReady()` called or 30 s passed | Cold or warm, prewarmed or not, ms to the first frame and to ready |
+| `screen.ready` (CluenoriPerformance) | `cluenoriScreenReady`, `screenReady`, once of each kind per visit | `kept` or `fresh`, ms since the screen appeared |
+| `screen.left` (CluenoriPerformance) | The next screen shows, or the session ends while it shows | ms in sight, CPU ms the app used meanwhile, ms scrolled and ms of hitches while scrolling |
+| `app.hang` (CluenoriPerformance) | The main thread answers 250 ms or more late, in the foreground | How long |
 | `app.memory` (CluenoriPerformance) | Each minute in the foreground, on memory warnings, and as a session ends | `phys_footprint` now, and its peak |
 | `metrickit` (CluenoriPerformance) | When iOS delivers MetricKit's reports, about daily | The report's JSON |
 
-Each signal of a session carries its session, the user ID if `identify` was called, and the feature
-in effect. Each batch carries the installation's ID, the environment, the release, the SDK, and the
+Each signal of a session carries its session, the user ID if `identify` was called, the feature in
+effect, and the screen shown (with CluenoriAnalytics, which names screens): so a person's signals
+read as their journey, screen by screen. Each batch carries the installation's ID, the environment, the release, the SDK, and the
 device: its model (`iPhone18,1`), OS version, locale and time zone. Your Cluenori reads the country
 from the request's address and doesn't keep the address.
 
@@ -235,5 +244,18 @@ its rules, and the manifest is asked for and kept; the update gate shows it on t
   likes, and their previews show every state.
 - **No signals outside a session:** an app launched in the background, such as by a push, records
   nothing until it comes to the foreground, except MetricKit's reports, which belong to no session.
+- **Screens are CluenoriAnalytics' to name.** CluenoriPerformance measures the visits of the screens
+  it names; without it, launches, memory, hangs and MetricKit are still measured, not by screen.
+  Screens may be shown on any thread: each visit ends on the thread that showed the next, in the
+  order they were shown, and a `reset()` ends the visit in the session that ends, the screen going
+  on as a new visit in the next.
+- **Hitches are measured while scrolling only:** a display link runs in the run loop's tracking mode,
+  while a scroll view follows a finger or decelerates, so a screen at rest costs nothing. iOS has no
+  signal for an animation that failed; late frames and a main thread that doesn't answer are the
+  real ones. A hang is timed by a ping to the main thread every 100 ms from another, only in the
+  foreground, so a suspended app is never one.
+- **Crashes are MetricKit's,** each counted against the release its report names, so a crash of
+  0.3.0 reported after the update to 0.4.0 is still 0.3.0's. No crash handler is installed, so the
+  SDK never fights another reporter.
 - **The memory as a session ends** is measured as the app leaves the foreground, and recorded only
   if the session ends before it comes back, even after the app was terminated.

@@ -187,10 +187,10 @@ struct ConsentTests {
         world.deployment.setOffline(true)
         let engine = world.launch()
         engine.foreground()
-        engine.recordScreen("card")
+        engine.show(screen: "card")
         await engine.flush()
         engine.consent(.none)
-        engine.recordScreen("profile")
+        engine.show(screen: "profile")
         world.deployment.setOffline(false)
         world.clock.advance(3600)
         await engine.flush()
@@ -198,7 +198,7 @@ struct ConsentTests {
 
         let next = world.launch()
         next.foreground()
-        next.recordScreen("feed")
+        next.show(screen: "feed")
         await next.flush()
         #expect(world.deployment.attempts.isEmpty)
     }
@@ -208,9 +208,9 @@ struct ConsentTests {
         let engine = world.launch()
         engine.consent(.none)
         engine.foreground()
-        engine.recordScreen("dropped")
+        engine.show(screen: "dropped")
         engine.consent(.full)
-        engine.recordScreen("card")
+        engine.show(screen: "card")
         await engine.flush()
         #expect(world.deployment.signals.map(\.kind) == ["session.started", "screen"])
     }
