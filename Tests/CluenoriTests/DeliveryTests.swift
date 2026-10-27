@@ -23,8 +23,8 @@ struct DeliveryTests {
         #expect(batch.environment == "production")
         #expect(batch.release == "0.3.0+20")
         #expect(batch.device.model == "iPhone18,1")
-        #expect(batch.sdk == AppSdk(name: "cluenori-swift", version: "0.2.0"))
-        #expect(world.deployment.authorizations == ["Bearer cluenori.sdk.notes-ios.secret"])
+        #expect(batch.sdk == AppSdk(name: "cluenori-swift", version: "0.2.1"))
+        #expect(world.deployment.authorizations == ["Bearer cluenori-sdk.notes.notes-ios.R2d2C3poBb8Wq0Lk5Xz7Aa"])
         #expect(Set(world.deployment.signals.compactMap(\.id)).count == 121)
     }
 

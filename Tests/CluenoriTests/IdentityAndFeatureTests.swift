@@ -100,14 +100,18 @@ struct FeatureTests {
         #expect(world.misuses.reported.count == 2)
     }
 
-    @Test func `requests carry the release, a new trace, and the feature as baggage`() async throws {
+    @Test func `requests carry the release, a new trace, and the feature, component and release as baggage`()
+        async throws
+    {
         let world = TestWorld()
         let engine = world.launch()
         let mark = engine.begin(feature: "cards.flip")
         defer { mark.end() }
         let headers = engine.requestHeaders()
         #expect(headers["Cluenori-Release"] == "0.3.0+20")
-        #expect(headers["baggage"] == "cluenori.feature=cards.flip,cluenori.origin.release=0.3.0+20")
+        #expect(
+            headers["baggage"]
+                == "cluenori.feature=cards.flip,cluenori.origin.component=notes-ios,cluenori.origin.release=0.3.0+20")
         let traceparent = try #require(headers["traceparent"])
         let parts = traceparent.split(separator: "-")
         #expect(
@@ -124,6 +128,34 @@ struct FeatureTests {
             ])
         #expect(headers["traceparent"] == nil)
         #expect(headers["baggage"] == "tenant=acme,cluenori.feature=cards,cluenori.origin.release=0.3.0+20")
+    }
+
+    @Test func `a key that isn't an SDK key names no component, and the baggage goes without it`() async {
+        let world = TestWorld()
+        let engine = world.launch(key: "cluenori.sdk.notes-ios.secret")
+        #expect(engine.requestHeaders()["baggage"] == "cluenori.origin.release=0.3.0+20")
+    }
+
+    @Test(
+        arguments: [
+            ("cluenori-sdk.notes.notes-ios.R2d2C3poBb8Wq0Lk5Xz7Aa", "notes-ios"),
+            ("cluenori-sdk.notes.notes-ios", nil),
+            ("cluenori-sdk.notes.Notes.abc", nil),
+            ("cluenori-sdk.notes.notes-ios.", nil),
+            ("cluenori-sdk.notes.notes-ios.!", nil),
+            ("cluenori-sdk.notes.notes-ios.R2d2C3poBb8Wq0Lk5Xz7A", nil),
+            ("cluenori-sdk.notes.notes-ios.R2d2C3poBb8Wq0Lk5Xz7Aaa", nil),
+            ("cluenori-sdk.notes.\(String(repeating: "c", count: 41)).R2d2C3poBb8Wq0Lk5Xz7Aa", nil),
+            (
+                "cluenori-sdk.notes.\(String(repeating: "c", count: 40)).R2d2C3poBb8Wq0Lk5Xz7Aa",
+                String(repeating: "c", count: 40)
+            ),
+            ("cluenori-sdk.notes.notes-ios.R2d2-3po_b8Wq0Lk5Xz7Aa", "notes-ios"),
+            ("cluenori-key.notes.notes-ios.abc", nil),
+            ("cluenori-sdk.notes.notes-ios.abc.def", nil),
+        ] as [(String, String?)])
+    func `the component is the SDK key's third part`(key: String, component: String?) {
+        #expect(TextRules.componentOfKey(key) == component)
     }
 
     @Test func `a traceparent is never all zeros`() {

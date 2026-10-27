@@ -56,7 +56,7 @@ package final class TestWorld: Sendable {
     /// The engine of the launch before stops, as its process would have.
     package func launch(
         release: String? = "0.3.0+20", environment: String = "production",
-        key: String = "cluenori.sdk.notes-ios.secret",
+        key: String = "cluenori-sdk.notes.notes-ios.R2d2C3poBb8Wq0Lk5Xz7Aa",
         osVersion: OperatingSystemVersion = OperatingSystemVersion(majorVersion: 27, minorVersion: 2, patchVersion: 0),
         locale: String = "uk-UA", start: Bool = true,
         wait: @escaping @Sendable (Duration) async throws -> Void = { _ in try await Task.sleep(for: .seconds(3600)) }

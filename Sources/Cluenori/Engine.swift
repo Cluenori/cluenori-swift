@@ -102,6 +102,8 @@ package final class Engine: Sendable {
 
     private struct Running {
         var parts: Parts?
+        /// The component the SDK key names, for requests' baggage; nil for a key that isn't one.
+        var component: String?
         var tasks: [Task<Void, Never>] = []
         /// A pause of the delivery loop that a nudge may end early.
         var pause: Task<Void, any Error>?
@@ -120,7 +122,7 @@ package final class Engine: Sendable {
     static let waitingSignalsLimit = 1_000
     private let logger = Logger(subsystem: "com.cluenori.sdk", category: "engine")
 
-    package static let sdk = AppSdk(name: "cluenori-swift", version: "0.2.0")
+    package static let sdk = AppSdk(name: "cluenori-swift", version: "0.2.1")
 
     package init(dependencies: Dependencies) {
         self.dependencies = dependencies
@@ -167,7 +169,7 @@ package final class Engine: Sendable {
         }
         let first = running.withLock { running in
             guard running == nil else { return false }
-            running = Running()
+            running = Running(component: TextRules.componentOfKey(configuration.key))
             return true
         }
         guard first else {
@@ -366,7 +368,9 @@ package final class Engine: Sendable {
 
     /// Headers for a request to the app's own API (`RequestHeaders`).
     func requestHeaders(existing: [String: String] = [:]) -> [String: String] {
-        RequestHeaders.headers(release: release, feature: features.current, existing: existing)
+        RequestHeaders.headers(
+            release: release, component: running.withLock { $0?.component }, feature: features.current,
+            existing: existing)
     }
 
     // MARK: - Sending

@@ -13,7 +13,7 @@ In Xcode, File > Add Package Dependencies, and enter `https://github.com/Cluenor
 Or, in a `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/Cluenori/cluenori-swift", from: "0.2.0"),
+.package(url: "https://github.com/Cluenori/cluenori-swift", from: "0.2.1"),
 // and in your target:
 .product(name: "Cluenori", package: "cluenori-swift"),
 .product(name: "CluenoriUpdateGate", package: "cluenori-swift"),
@@ -120,8 +120,10 @@ is a string of at most 256 characters, a number, or a boolean, at most 32 per ev
 
 - `Cluenori-Release: 0.3.0+20`, so your API can apply the same version policy;
 - `traceparent`, a new W3C trace for each request, unless the request has one;
-- `baggage: cluenori.feature=cards.flip,cluenori.origin.release=0.3.0+20`, after any baggage the
-  request has.
+- `baggage: cluenori.feature=cards.flip,cluenori.origin.component=notes-ios,cluenori.origin.release=0.3.0+20`,
+  after any baggage the request has: the feature in effect, the component your SDK key names, and
+  the release, the same keys in the same order as the web SDK's, so your backend can split its work
+  by the client that called it.
 
 Add them to requests to your own API only, never to a third party's.
 

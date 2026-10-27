@@ -11,6 +11,18 @@ package enum TextRules {
             && text.split(separator: ".", omittingEmptySubsequences: false).allSatisfy { isKey(Substring($0)) }
     }
 
+    /// The component an SDK key belongs to, `cluenori-sdk.<project>.<component>.<id>`, as the
+    /// deployment reads one (product/engines/projects/src/sdk-key.ts): the project and component are
+    /// keys of up to 40 characters, the ID 22 base64url characters. Nil for text that isn't such a key.
+    package static func componentOfKey(_ text: String) -> String? {
+        let parts = text.split(separator: ".", omittingEmptySubsequences: false)
+        guard parts.count == 4, parts[0] == "cluenori-sdk", isEnvironmentKey(String(parts[1])),
+            isEnvironmentKey(String(parts[2])), parts[3].utf8.count == 22,
+            parts[3].utf8.allSatisfy({ isAlphanumeric($0) || $0 == UInt8(ascii: "-") || $0 == UInt8(ascii: "_") })
+        else { return nil }
+        return String(parts[2])
+    }
+
     /// An environment key: one key of up to 40 characters, such as `production`.
     package static func isEnvironmentKey(_ text: String) -> Bool {
         text.utf16.count <= 40 && isKey(Substring(text))

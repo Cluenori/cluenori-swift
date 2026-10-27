@@ -84,7 +84,7 @@ public enum Cluenori {
     }
 
     /// The headers for one request to your own API: `Cluenori-Release`, a new `traceparent`, and
-    /// `baggage` with the feature in effect and the app's release. `URLRequest.addCluenoriHeaders()`
+    /// `baggage` with the feature in effect, the component the SDK key names, and the app's release. `URLRequest.addCluenoriHeaders()`
     /// adds them to a request.
     public static func requestHeaders() -> [String: String] {
         Engine.shared.requestHeaders()

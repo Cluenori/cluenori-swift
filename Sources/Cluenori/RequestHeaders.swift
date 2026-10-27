@@ -6,8 +6,10 @@ import Foundation
 /// - `Cluenori-Release`: the app's release, `0.3.0+20`, by which the API can enforce the version
 ///   policy;
 /// - `traceparent`: a new W3C trace for each request, unless the request has one;
-/// - `baggage`: `cluenori.feature`, the feature in effect, and `cluenori.origin.release`, the app's
-///   release, added to any baggage the request has.
+/// - `baggage`: `cluenori.feature`, the feature in effect, `cluenori.origin.component`, the component
+///   the SDK key names, and `cluenori.origin.release`, the app's release, after any baggage the
+///   request has: the web SDK's keys, in its order (sdks/web/src/request-headers.ts), so a backend
+///   can split its work by the client that called it.
 ///
 /// Add them to requests to your own API alone: a third party, such as a payment provider, has no use
 /// for them.
@@ -16,11 +18,12 @@ enum RequestHeaders {
     static let traceparent = "traceparent"
     static let baggage = "baggage"
     static let featureKey = "cluenori.feature"
+    static let originComponentKey = "cluenori.origin.component"
     static let originReleaseKey = "cluenori.origin.release"
 
     /// The headers for one request, with a new trace, merged into `existing` ones.
     static func headers(
-        release: String?, feature: String?, existing: [String: String] = [:],
+        release: String?, component: String? = nil, feature: String?, existing: [String: String] = [:],
         random: () -> UInt64 = { UInt64.random(in: .min ... .max) }
     ) -> [String: String] {
         var headers: [String: String] = [:]
@@ -30,6 +33,7 @@ enum RequestHeaders {
         }
         var entries: [(String, String)] = []
         if let feature { entries.append((featureKey, feature)) }
+        if let component { entries.append((originComponentKey, component)) }
         if let release { entries.append((originReleaseKey, release)) }
         if !entries.isEmpty {
             let ours = Set(entries.map(\.0))
@@ -79,11 +83,9 @@ enum RequestHeaders {
 
 extension URLRequest {
     /// Adds Cluenori's headers for a request to your own API: the app's release, a new trace, and the
-    /// feature in effect as baggage. Keeps a `traceparent` the request has, and its other baggage.
+    /// feature in effect, the component and its release as baggage. Keeps a `traceparent` the request has, and its other baggage.
     public mutating func addCluenoriHeaders() {
-        let headers = RequestHeaders.headers(
-            release: Engine.shared.release, feature: Engine.shared.features.current,
-            existing: allHTTPHeaderFields ?? [:])
+        let headers = Engine.shared.requestHeaders(existing: allHTTPHeaderFields ?? [:])
         for (name, value) in headers {
             setValue(value, forHTTPHeaderField: name)
         }
